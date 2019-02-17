@@ -1,31 +1,91 @@
-import java.util.*;
+import java_cup.runtime.Symbol;
+
 import java.io.*;
-import java_cup.runtime.*;  // defines Symbol
 
 /**
- * This program is to be used to test the Carrot scanner.
- * This version is set up to test all tokens, but more code is needed to test 
- * other aspects of the scanner (e.g., input that causes errors, character 
- * numbers, values associated with tokens).
+ * This program is to be used to test the Carrot scanner. This version is set up
+ * to test all tokens, but more code is needed to test other aspects of the
+ * scanner (e.g., input that causes errors, character numbers, values associated
+ * with tokens).
  */
 public class P2 {
     public static void main(String[] args) throws IOException {
-                                           // exception may be thrown by yylex
+        // exception may be thrown by yylex
+
         // test all tokens
-        testAllTokens();
+        // testAllTokens();
         CharNum.num = 1;
-    
-        // ADD CALLS TO OTHER TEST METHODS HERE
+
+        // test errors
+        testErrors();
+        CharNum.num = 1;
+    }
+
+    private static void testErrors() throws IOException {
+        checkStrLitTokenVal("\"test", "test", "Errror : untermined");
+    }
+
+    private static void checkStrLitTokenVal(String input, String expected, String errorMessage) throws IOException {
+        Symbol symbol = getSymbol(input, errorMessage);
+
+        if (symbol == null)
+            return;
+
+        Object tokenval = symbol.value;
+        if (!(tokenval instanceof StrLitTokenVal)) {
+            System.out.println("Failed to tokenize StrLitTokenVal: " + expected);
+            return;
+        }
+
+        String actual = ((StrLitTokenVal) tokenval).strVal;
+        if (!actual.equals(expected)) {
+            System.out.println("Failed to tokenize String correctly. Expected: " + expected + ". Actual: " + actual);
+        }
+    }
+
+    private static Symbol getSymbol(String string, String errorMessage) throws IOException {
+        InputStream stream = new ByteArrayInputStream(string.getBytes());
+        Yylex scanner = new Yylex(stream);
+        Symbol symbol = null;
+
+        checkErrorMessage(() -> {
+            symbol = scanner.next_token();
+        }, errorMessage);
+
+        return symbol;
+    }
+
+    private static void checkErrorMessage(Runnable runnable, String expected) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream newPrintStream = new PrintStream(buffer);
+        PrintStream oldPrintStream = System.err;
+
+        System.setErr(newPrintStream);
+
+        runnable.run();
+        System.err.flush();
+
+        System.setErr(oldPrintStream);
+
+        String actual = buffer.toString();
+
+        buffer.close();
+        newPrintStream.close();
+        oldPrintStream.close();
+
+        // TODO: unexpected error message thrown
+
+        if (!actual.contains(expected))
+            System.out.println("Error message mismatch. Expected: " + expected + ". Actual: " + actual);
     }
 
     /**
      * testAllTokens
-     *
-     * Open and read from file allTokens.txt
-     * For each token read, write the corresponding string to allTokens.out
-     * If the input file contains all tokens, one per line, we can verify
-     * correctness of the scanner by comparing the input and output files
-     * (e.g., using a 'diff' command).
+     * <p>
+     * Open and read from file allTokens.txt For each token read, write the
+     * corresponding string to allTokens.out If the input file contains all tokens,
+     * one per line, we can verify correctness of the scanner by comparing the input
+     * and output files (e.g., using a 'diff' command).
      */
     private static void testAllTokens() throws IOException {
         // open input and output files
@@ -48,29 +108,29 @@ public class P2 {
         while (my_token.sym != sym.EOF) {
             switch (my_token.sym) {
             case sym.BOOL:
-                outFile.println("bool"); 
+                outFile.println("bool");
                 break;
-			case sym.INT:
+            case sym.INT:
                 outFile.println("int");
                 break;
             case sym.VOID:
                 outFile.println("void");
                 break;
             case sym.TRUE:
-                outFile.println("true"); 
+                outFile.println("true");
                 break;
             case sym.FALSE:
-                outFile.println("false"); 
+                outFile.println("false");
                 break;
             case sym.STRUCT:
-                outFile.println("struct"); 
+                outFile.println("struct");
                 break;
             case sym.CIN:
-                outFile.println("cin"); 
+                outFile.println("cin");
                 break;
             case sym.COUT:
                 outFile.println("cout");
-                break;				
+                break;
             case sym.IF:
                 outFile.println("if");
                 break;
@@ -84,14 +144,14 @@ public class P2 {
                 outFile.println("return");
                 break;
             case sym.ID:
-                outFile.println(((IdTokenVal)my_token.value).idVal);
+                outFile.println(((IdTokenVal) my_token.value).idVal);
                 break;
-            case sym.INTLITERAL:  
-                outFile.println(((IntLitTokenVal)my_token.value).intVal);
+            case sym.INTLITERAL:
+                outFile.println(((IntLitTokenVal) my_token.value).intVal);
                 break;
-            case sym.STRINGLITERAL: 
-                outFile.println(((StrLitTokenVal)my_token.value).strVal);
-                break;    
+            case sym.STRINGLITERAL:
+                outFile.println(((StrLitTokenVal) my_token.value).strVal);
+                break;
             case sym.LCURLY:
                 outFile.println("{");
                 break;
@@ -118,13 +178,13 @@ public class P2 {
                 break;
             case sym.READ:
                 outFile.println(">>");
-                break;				
+                break;
             case sym.PLUSPLUS:
                 outFile.println("++");
                 break;
             case sym.MINUSMINUS:
                 outFile.println("--");
-                break;	
+                break;
             case sym.PLUS:
                 outFile.println("+");
                 break;
@@ -164,11 +224,11 @@ public class P2 {
             case sym.GREATEREQ:
                 outFile.println(">=");
                 break;
-			case sym.ASSIGN:
+            case sym.ASSIGN:
                 outFile.println("=");
                 break;
-			default:
-				outFile.println("UNKNOWN TOKEN");
+            default:
+                outFile.println("UNKNOWN TOKEN");
             } // end switch
 
             my_token = my_scanner.next_token();

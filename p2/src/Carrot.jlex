@@ -9,10 +9,10 @@ import java_cup.runtime.*; // defines the Symbol class
 // Some tokens (literals and IDs) also include the value of the token.
 
 class TokenVal {
-  // fields
+    // fields
     int linenum;
     int charnum;
-  // constructor
+    // constructor
     TokenVal(int lineNum, int chNum) {
         linenum = lineNum;
         charnum = chNum;
@@ -20,9 +20,9 @@ class TokenVal {
 }
 
 class IntLitTokenVal extends TokenVal {
-  // new field: the value of the integer literal
+    // new field: the value of the integer literal
     int intVal;
-  // constructor
+    // constructor
     IntLitTokenVal(int lineNum, int chNum, int val) {
         super(lineNum, chNum);
         intVal = val;
@@ -30,9 +30,9 @@ class IntLitTokenVal extends TokenVal {
 }
 
 class IdTokenVal extends TokenVal {
-  // new field: the value of the identifier
+    // new field: the value of the identifier
     String idVal;
-  // constructor
+    // constructor
     IdTokenVal(int lineNum, int chNum, String val) {
         super(lineNum, chNum);
     idVal = val;
@@ -40,9 +40,9 @@ class IdTokenVal extends TokenVal {
 }
 
 class StrLitTokenVal extends TokenVal {
-  // new field: the value of the string literal
+    // new field: the value of the string literal
     String strVal;
-  // constructor
+    // constructor
     StrLitTokenVal(int lineNum, int chNum, String val) {
         super(lineNum, chNum);
         strVal = val;
@@ -58,38 +58,307 @@ class CharNum {
 
 DIGIT=        [0-9]
 WHITESPACE=   [\040\t]
+LETTER=       [A-Za-z]
+UNDERSCORE =  [_]
+QUOTE = [\"]
+NOTQUOTE = [^\"]
+BACKSLASH = [\\]
+ESCAPECHAR = [nt'\"\?\\]
+NOTESCAPECHAR = [^nt'\"\?\\]
+SINGLECHAR = [^\n\"\\]
+SLASH = [/]
+SHARP = [#]
 
 %implements java_cup.runtime.Scanner
 %function next_token
 %type java_cup.runtime.Symbol
 
 %eofval{
-return new Symbol(sym.EOF);
+    return new Symbol(sym.EOF);
 %eofval}
 
 %line
 
 %%
 
-{DIGIT}+  { // NOTE: the following computation of the integer value does NOT
-            //       check for overflow.  This must be changed.
-            int val = (new Integer(yytext())).intValue();
-            Symbol S = new Symbol(sym.INTLITERAL,
-                             new IntLitTokenVal(yyline+1, CharNum.num, val));
-            CharNum.num += yytext().length();
-            return S;
-          }
+"bool" {
+    Symbol S = new Symbol(sym.BOOL, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
 
-\n        { CharNum.num = 1; }
+"int" {
+    Symbol S = new Symbol(sym.INT, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
 
-{WHITESPACE}+  { CharNum.num += yytext().length(); }
+"void" {
+    Symbol S = new Symbol(sym.VOID, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
 
-"+"       { Symbol S = new Symbol(sym.PLUS, new TokenVal(yyline+1, CharNum.num));
-            CharNum.num++;
-            return S;
-          }
-        
-.         { ErrMsg.fatal(yyline+1, CharNum.num,
-                         "ignoring illegal character: " + yytext());
-            CharNum.num++;
-          }
+"true" {
+    Symbol S = new Symbol(sym.TRUE, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"false" {
+    Symbol S = new Symbol(sym.FALSE, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"struct" {
+    Symbol S = new Symbol(sym.STRUCT, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"cin" {
+    Symbol S = new Symbol(sym.CIN, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"cout" {
+    Symbol S = new Symbol(sym.COUT, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"if" {
+    Symbol S = new Symbol(sym.IF, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"else" {
+    Symbol S = new Symbol(sym.ELSE, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"while" {
+    Symbol S = new Symbol(sym.WHILE, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"return" {
+    Symbol S = new Symbol(sym.RETURN, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+({LETTER}|{UNDERSCORE})({LETTER}|{UNDERSCORE}|{DIGIT})* {
+    Symbol S = new Symbol(sym.ID, new IdTokenVal(yyline + 1, CharNum.num, yytext()));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+
+{DIGIT}+ { 
+    int val = 0;
+    try {
+        val = (new Integer(yytext())).intValue();
+    } catch (Exception e) {
+        val = Integer.MAX_VALUE;
+        ErrMsg.warn(yyline + 1, CharNum.num, "integer literal too large; using max value");
+    } finally {
+        Symbol S = new Symbol(sym.INTLITERAL, new IntLitTokenVal(yyline + 1, CharNum.num, val));
+        CharNum.num += yytext().length();
+        return S;
+    }
+}
+
+{QUOTE}(({SINGLECHAR})*{BACKSLASH}{ESCAPECHAR})*({SINGLECHAR})*{QUOTE} {
+    Symbol S = new Symbol(sym.STRINGLITERAL, new StrLitTokenVal(yyline + 1, CharNum.num, yytext()));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+{QUOTE}(({SINGLECHAR})*{BACKSLASH}{NOTESCAPECHAR})+({SINGLECHAR})* {
+    ErrMsg.warn(yyline + 1, CharNum.num, "unterminated string literal with bad escaped character ignored");
+    CharNum.num = 1;
+}
+
+{QUOTE}(({SINGLECHAR})*{BACKSLASH}{ESCAPECHAR})*({SINGLECHAR})* {
+    ErrMsg.warn(yyline + 1, CharNum.num, "unterminated string literal ignored");
+    CharNum.num = 1;
+}
+
+{QUOTE}.*{QUOTE} {
+    ErrMsg.warn(yyline + 1, CharNum.num, "string literal with bad escaped character ignored");
+    CharNum.num = 1;
+}
+
+"<<" {
+    Symbol S = new Symbol(sym.WRITE, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+">>" {
+    Symbol S = new Symbol(sym.READ, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"++" {
+    Symbol S = new Symbol(sym.PLUSPLUS, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"--" {
+    Symbol S = new Symbol(sym.MINUSMINUS, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"&&" {
+    Symbol S = new Symbol(sym.AND, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+
+"||" {
+    Symbol S = new Symbol(sym.OR, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"==" {
+    Symbol S = new Symbol(sym.EQUALS, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"!=" {
+    Symbol S = new Symbol(sym.NOTEQUALS, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"<=" {
+    Symbol S = new Symbol(sym.LESSEQ, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+">=" {
+    Symbol S = new Symbol(sym.GREATEREQ, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"{" {
+    Symbol S = new Symbol(sym.LCURLY, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"}" {
+    Symbol S = new Symbol(sym.RCURLY, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"(" {
+    Symbol S = new Symbol(sym.LPAREN, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+")" {
+    Symbol S = new Symbol(sym.RPAREN, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+";" {
+    Symbol S = new Symbol(sym.SEMICOLON, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"," {
+    Symbol S = new Symbol(sym.COMMA, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"." {
+    Symbol S = new Symbol(sym.DOT, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"+" {
+    Symbol S = new Symbol(sym.PLUS, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"-" {
+    Symbol S = new Symbol(sym.MINUS, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"*" {
+    Symbol S = new Symbol(sym.TIMES, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"/" {
+    Symbol S = new Symbol(sym.DIVIDE, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"!" {
+    Symbol S = new Symbol(sym.NOT, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"<" {
+    Symbol S = new Symbol(sym.LESS, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+">" {
+    Symbol S = new Symbol(sym.GREATER, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+"=" {
+    Symbol S = new Symbol(sym.ASSIGN, new TokenVal(yyline + 1, CharNum.num));
+    CharNum.num += yytext().length();
+    return S;
+}
+
+(({SLASH}{SLASH}{SLASH})|({SHARP}{SHARP})).* {
+    // Empty
+}
+
+\n {
+    CharNum.num = 1;
+}
+
+{WHITESPACE}+ {
+    CharNum.num += yytext().length();
+}
+
+. {
+    ErrMsg.fatal(yyline + 1, CharNum.num, "ignoring illegal character: " + yytext());
+    CharNum.num++;
+}
