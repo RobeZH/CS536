@@ -10,22 +10,23 @@ import java.io.*;
  */
 public class P2 {
     // An array of reserved words and one- or two-character symbols
-    static final String[] genericTokenInputs = { "bool", "int", "void", "true", "false", "struct", "cin", "cout", "if",
-            "else", "while", "return", "{", "}", "(", ")", ";", ",", ".", "<<", ">>", "++", "--", "+", "-", "*", "/",
-            "!", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "=" };
+    private static final String[] genericTokenInputs = { "bool", "int", "void", "true", "false", "struct", "cin",
+            "cout", "if", "else", "while", "return", "{", "}", "(", ")", ";", ",", ".", "<<", ">>", "++", "--", "+",
+            "-", "*", "/", "!", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "=" };
 
     // An array of string literals
-    static final String[] strLitTokenInputs = { addQuotes("str"), addQuotes("happy"), addQuotes("apple"),
+    private static final String[] strLitTokenInputs = { addQuotes("str"), addQuotes("happy"), addQuotes("apple"),
             addQuotes("\\t"), addQuotes("\\n"), addQuotes("\\'"), addQuotes("\\\""), addQuotes("\\\\"), addQuotes("") };
 
     // An array of token inputs that will be parsed to intTokenVal
-    static final String[] intLitTokenInputs = { "1", "2", "3", "100", "2147483647" };
+    private static final String[] intLitTokenInputs = { "1", "2", "3", "100", "2147483647" };
 
     // An array of token inputs that will be parsed to idTokenVal
-    static final String[] idTokenInputs = { "a", "b", "c", "i", "apple", "test", "x", "y", "z" };
+    private static final String[] idTokenInputs = { "a", "b", "c", "i", "apple", "test", "x", "y", "z" };
 
     // An array of the previous arrays
-    static final String[][] tokenInputs = { genericTokenInputs, strLitTokenInputs, intLitTokenInputs, idTokenInputs };
+    private static final String[][] tokenInputs = { genericTokenInputs, strLitTokenInputs, intLitTokenInputs,
+            idTokenInputs };
 
     /**
      * The main function
@@ -120,8 +121,7 @@ public class P2 {
      * This methods compares two TokenVals and print their difference, including the
      * char number, line number, token type and token value
      */
-    private static void compareTokenVal(String input, TokenVal actualTokenval, TokenVal expectedTokenVal)
-            throws IOException {
+    private static void compareTokenVal(String input, TokenVal actualTokenval, TokenVal expectedTokenVal) {
         // Assign a placeholder to actualTokenval
         if (actualTokenval == null)
             actualTokenval = new TokenVal(-1, -1);
