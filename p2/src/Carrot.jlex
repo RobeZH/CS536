@@ -181,17 +181,17 @@ SHARP = [#]
 }
 
 {QUOTE}(({SINGLECHAR})*{BACKSLASH}{NOTESCAPECHAR})+({SINGLECHAR})* {
-    ErrMsg.warn(yyline + 1, CharNum.num, "unterminated string literal with bad escaped character ignored");
+    ErrMsg.fatal(yyline + 1, CharNum.num, "unterminated string literal with bad escaped character ignored");
     CharNum.num = 1;
 }
 
 {QUOTE}(({SINGLECHAR})*{BACKSLASH}{ESCAPECHAR})*({SINGLECHAR})* {
-    ErrMsg.warn(yyline + 1, CharNum.num, "unterminated string literal ignored");
+    ErrMsg.fatal(yyline + 1, CharNum.num, "unterminated string literal ignored");
     CharNum.num = 1;
 }
 
-{QUOTE}.*{QUOTE} {
-    ErrMsg.warn(yyline + 1, CharNum.num, "string literal with bad escaped character ignored");
+{QUOTE}(({SINGLECHAR})*{BACKSLASH}{NOTESCAPECHAR})+({SINGLECHAR})*{QUOTE} {
+    ErrMsg.fatal(yyline + 1, CharNum.num, "string literal with bad escaped character ignored");
     CharNum.num = 1;
 }
 
@@ -347,7 +347,7 @@ SHARP = [#]
 }
 
 (({SLASH}{SLASH}{SLASH})|({SHARP}{SHARP})).* {
-    // Empty
+    // Comment
 }
 
 \n {
@@ -358,7 +358,7 @@ SHARP = [#]
     CharNum.num += yytext().length();
 }
 
-. {
-    ErrMsg.fatal(yyline + 1, CharNum.num, "ignoring illegal character: " + yytext());
+. { 
+    ErrMsg.fatal(yyline + 1, CharNum.num, "illegal character ignored: " + yytext());
     CharNum.num++;
 }

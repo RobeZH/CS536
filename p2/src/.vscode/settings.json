@@ -1,0 +1,4 @@
+{
+  "java.classPath": ["deps/java_cup", "deps/JLex"],
+  "java.externalDependencies": ["deps/java_cup", "deps/JLex"]
+}

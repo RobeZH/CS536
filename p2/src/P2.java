@@ -9,74 +9,272 @@ import java.io.*;
  * with tokens).
  */
 public class P2 {
+    // An array of reserved words and one- or two-character symbols
+    static final String[] genericTokenInputs = { "bool", "int", "void", "true", "false", "struct", "cin", "cout", "if",
+            "else", "while", "return", "{", "}", "(", ")", ";", ",", ".", "<<", ">>", "++", "--", "+", "-", "*", "/",
+            "!", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "=" };
+
+    // An array of string literals
+    static final String[] strLitTokenInputs = { addQuotes("str"), addQuotes("happy"), addQuotes("apple"),
+            addQuotes("\\t"), addQuotes("\\n"), addQuotes("\\'"), addQuotes("\\\""), addQuotes("\\\\"), addQuotes("") };
+
+    // An array of token inputs that will be parsed to intTokenVal
+    static final String[] intLitTokenInputs = { "1", "2", "3", "100", "2147483647" };
+
+    // An array of token inputs that will be parsed to idTokenVal
+    static final String[] idTokenInputs = { "a", "b", "c", "i", "apple", "test", "x", "y", "z" };
+
+    // An array of the previous arrays
+    static final String[][] tokenInputs = { genericTokenInputs, strLitTokenInputs, intLitTokenInputs, idTokenInputs };
+
+    /**
+     * The main function
+     */
     public static void main(String[] args) throws IOException {
-        // exception may be thrown by yylex
 
         // test all tokens
-        // testAllTokens();
-        CharNum.num = 1;
+        testAllTokens();
 
         // test errors
         testErrors();
-        CharNum.num = 1;
+
+        // test char number
+        testCharNum();
+
+        // test line number
+        testLineNum();
+
+        // test value stored in TokenVal
+        testVal();
     }
 
+    /**
+     * Test if the value of the token matches the expected value
+     */
+    private static void testVal() throws IOException {
+        for (String idTokenInput : idTokenInputs)
+            checkIdTokenVal(idTokenInput, idTokenInput, null);
+
+        for (String intLitTokenInput : intLitTokenInputs)
+            checkIntLitTokenVal(intLitTokenInput, Integer.parseInt(intLitTokenInput), null);
+
+        for (String strLitTokenInput : strLitTokenInputs)
+            checkStrLitTokenVal(strLitTokenInput, strLitTokenInput, null);
+    }
+
+    /**
+     * Test if the error thrown matches the expected error
+     */
     private static void testErrors() throws IOException {
-        checkStrLitTokenVal("\"test", "test", "Errror : untermined");
+        final String BAD_ESC = "***ERROR*** string literal with bad escaped character ignored";
+        final String UNTERM_STR = "***ERROR*** unterminated string literal ignored";
+        final String UNTERM_STR_WITH_BAD_ESC = "***ERROR*** unterminated string literal with bad escaped character ignored";
+        final String BAD_INT = "***WARNING*** integer literal too large; using max value";
+        final String ILLEGAL_CHAR = "***ERROR*** illegal character ignored: ";
+
+        checkStrLitTokenVal(addQuotes("test\\a"), null, BAD_ESC);
+        checkStrLitTokenVal("\"test", null, UNTERM_STR);
+        checkStrLitTokenVal("\"", null, UNTERM_STR);
+        checkStrLitTokenVal("\"test\\n", null, UNTERM_STR);
+        checkStrLitTokenVal("\"test\\a", null, UNTERM_STR_WITH_BAD_ESC);
+
+        checkIntLitTokenVal("2147483648", Integer.MAX_VALUE, BAD_INT);
+        checkIntLitTokenVal("1000000000000000000000000000000000000", Integer.MAX_VALUE, BAD_INT);
+
+        String[] illegalChars = { "&", "|", "\\", "^", ":", "%", "$", "@", "~", "`", "?" };
+        for (String illegalChar : illegalChars)
+            getTokenAndCheckErrorMessage(illegalChar, ILLEGAL_CHAR + illegalChar);
     }
 
-    private static void checkStrLitTokenVal(String input, String expected, String errorMessage) throws IOException {
-        Symbol symbol = getSymbol(input, errorMessage);
+    /**
+     * Check if String TokenVal matches as expected
+     */
+    private static void checkStrLitTokenVal(String input, String expectedValue, String expectedErrorMessage)
+            throws IOException {
+        TokenVal actualTokenval = getTokenAndCheckErrorMessage(input, expectedErrorMessage);
+        TokenVal expectedTokenval = expectedValue == null ? null : new StrLitTokenVal(1, 1, expectedValue);
+        compareTokenVal(input, actualTokenval, expectedTokenval);
+    }
 
-        if (symbol == null)
-            return;
+    /**
+     * Check if Integer TokenVal matches as expected
+     */
+    private static void checkIntLitTokenVal(String input, Integer expectedValue, String expectedErrorMessage)
+            throws IOException {
+        TokenVal actualTokenval = getTokenAndCheckErrorMessage(input, expectedErrorMessage);
+        TokenVal expectedTokenval = expectedValue == null ? null : new IntLitTokenVal(1, 1, expectedValue);
+        compareTokenVal(input, actualTokenval, expectedTokenval);
+    }
 
-        Object tokenval = symbol.value;
-        if (!(tokenval instanceof StrLitTokenVal)) {
-            System.out.println("Failed to tokenize StrLitTokenVal: " + expected);
-            return;
-        }
+    /**
+     * Check if Id TokenVal matches as expected
+     */
+    private static void checkIdTokenVal(String input, String expectedValue, String expectedErrorMessage)
+            throws IOException {
+        TokenVal actualTokenval = getTokenAndCheckErrorMessage(input, expectedErrorMessage);
+        TokenVal expectedTokenval = expectedValue == null ? null : new IdTokenVal(1, 1, expectedValue);
+        compareTokenVal(input, actualTokenval, expectedTokenval);
+    }
 
-        String actual = ((StrLitTokenVal) tokenval).strVal;
-        if (!actual.equals(expected)) {
-            System.out.println("Failed to tokenize String correctly. Expected: " + expected + ". Actual: " + actual);
+    /**
+     * This methods compares two TokenVals and print their difference, including the
+     * char number, line number, token type and token value
+     */
+    private static void compareTokenVal(String input, TokenVal actualTokenval, TokenVal expectedTokenVal)
+            throws IOException {
+        // Assign a placeholder to actualTokenval
+        if (actualTokenval == null)
+            actualTokenval = new TokenVal(-1, -1);
+
+        // Assign a placeholder to expectedTokenVal
+        if (expectedTokenVal == null)
+            expectedTokenVal = new TokenVal(-1, -1);
+
+        // Check Char Num
+        int actualCharNum = actualTokenval.charnum;
+        int expectedCharNum = expectedTokenVal.charnum;
+        if (actualCharNum != expectedCharNum)
+            printTestMessage("Char number mismatch for input " + addQuotes(input), expectedCharNum, actualCharNum);
+
+        // Check Line Num
+        int actualLineNum = actualTokenval.linenum;
+        int expectedLineNum = expectedTokenVal.linenum;
+        if (actualLineNum != expectedLineNum)
+            printTestMessage("Line number mismatch for input " + addQuotes(input), expectedLineNum, actualLineNum);
+
+        // Check Token Type
+        String expectedType = expectedTokenVal.getClass().getSimpleName();
+        String actualType = actualTokenval.getClass().getSimpleName();
+        if (!expectedTokenVal.getClass().isInstance(actualTokenval))
+            printTestMessage("Type mismatch for token " + addQuotes(input), expectedType, actualType);
+
+        // Check Token Value
+        if ("StrLitTokenVal".equals(expectedType)) {
+            String actualVal = ((StrLitTokenVal) actualTokenval).strVal;
+            String expectedVal = ((StrLitTokenVal) expectedTokenVal).strVal;
+            if (!actualVal.equals(expectedVal))
+                printTestMessage("Tokenize String " + addQuotes(input) + " incorrectly", expectedVal, actualVal);
+        } else if ("IntLitTokenVal".equals(expectedType)) {
+            Integer actualVal = ((IntLitTokenVal) actualTokenval).intVal;
+            Integer expectedVal = ((IntLitTokenVal) expectedTokenVal).intVal;
+            if (!actualVal.equals(expectedVal))
+                printTestMessage("Tokenize Integer " + addQuotes(input) + " incorrectly", expectedVal, actualVal);
+        } else if ("IdTokenVal".equals(expectedType)) {
+            String actualVal = ((IdTokenVal) actualTokenval).idVal;
+            String expectedVal = ((IdTokenVal) expectedTokenVal).idVal;
+            if (!actualVal.equals(expectedVal))
+                printTestMessage("Tokenize ID " + addQuotes(input) + " incorrectly", expectedVal, actualVal);
         }
     }
 
-    private static Symbol getSymbol(String string, String errorMessage) throws IOException {
-        InputStream stream = new ByteArrayInputStream(string.getBytes());
+    /**
+     * This methods takes in a list of input, combine them with delimiter and return
+     * a list of TokenVals
+     */
+    private static TokenVal[] getTokens(String[] input, String delim) throws IOException {
+        // Join the lines with delimiter
+        String lines = String.join(delim, input);
+
+        // Setup input stream and scanner
+        InputStream stream = new ByteArrayInputStream(lines.getBytes());
         Yylex scanner = new Yylex(stream);
-        Symbol symbol = null;
 
-        checkErrorMessage(() -> {
-            symbol = scanner.next_token();
-        }, errorMessage);
+        // Store the tokens in TokenVal
+        TokenVal[] result = new TokenVal[input.length];
+        for (int i = 0; i < input.length; i++)
+            result[i] = (TokenVal) scanner.next_token().value;
 
-        return symbol;
+        // Reset the char number
+        CharNum.num = 1;
+        return result;
     }
 
-    private static void checkErrorMessage(Runnable runnable, String expected) throws IOException {
+    /**
+     * This method check if the Error message matches as expected and return the
+     * TokenVal
+     */
+    private static TokenVal getTokenAndCheckErrorMessage(String input, String expectedErrorMessage) throws IOException {
+        // Redirect error message
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         PrintStream newPrintStream = new PrintStream(buffer);
         PrintStream oldPrintStream = System.err;
-
         System.setErr(newPrintStream);
 
-        runnable.run();
-        System.err.flush();
+        // Get next token
+        TokenVal result = getTokens(new String[] { input }, "")[0];
 
+        // Restore error stream
+        System.err.flush();
         System.setErr(oldPrintStream);
 
-        String actual = buffer.toString();
+        // Get error message
+        String actualErrorMessage = parseErrorMessage(buffer);
 
+        // Close the buffer and print stream
         buffer.close();
         newPrintStream.close();
-        oldPrintStream.close();
 
-        // TODO: unexpected error message thrown
+        // Check whether error message matches
+        expectedErrorMessage = expectedErrorMessage == null ? "" : expectedErrorMessage;
+        if (!actualErrorMessage.equals(expectedErrorMessage))
+            printTestMessage("Error message mismatch for input " + addQuotes(input), expectedErrorMessage,
+                    actualErrorMessage);
 
-        if (!actual.contains(expected))
-            System.out.println("Error message mismatch. Expected: " + expected + ". Actual: " + actual);
+        return result;
+    }
+
+    /**
+     * Print out Test Message
+     */
+    private static void printTestMessage(String message, Object expected, Object actual) {
+        expected = (expected == null || expected.toString().length() == 0) ? "(null)" : addQuotes(expected);
+        actual = (actual == null || actual.toString().length() == 0) ? "(null)" : addQuotes(actual);
+        System.out.println(message + ". Expected: " + expected + ". Actual: " + actual);
+    }
+
+    /**
+     * Add Quotes to the string
+     */
+    private static String addQuotes(Object str) {
+        return '"' + str.toString() + '"';
+    }
+
+    /**
+     * Parse Error Message
+     */
+    private static String parseErrorMessage(ByteArrayOutputStream buffer) {
+        String str = buffer.toString().trim();
+        return str.length() == 0 ? str : str.split(" ", 2)[1];
+    }
+
+    /**
+     * Test if Character Number is calculated correctly
+     */
+    private static void testCharNum() throws IOException {
+        for (String[] tokenInput : tokenInputs) {
+            int curCharNumber = 1;
+            TokenVal[] tokens = getTokens(tokenInput, " ");
+            for (int i = 0; i < tokenInput.length; i++) {
+                TokenVal expectedTokenVal = new TokenVal(1, curCharNumber);
+                compareTokenVal(tokenInput[i], tokens[i], expectedTokenVal);
+                curCharNumber += tokenInput[i].length() + 1;
+            }
+        }
+    }
+
+    /**
+     * Test if Line Number is calculated correctly
+     */
+    private static void testLineNum() throws IOException {
+        for (String[] tokenInput : tokenInputs) {
+            int curLineNumber = 1;
+            TokenVal[] tokens = getTokens(tokenInput, "\n");
+            for (int i = 0; i < tokenInput.length; i++) {
+                TokenVal expectedTokenVal = new TokenVal(curLineNumber, 1);
+                compareTokenVal(tokenInput[i], tokens[i], expectedTokenVal);
+                curLineNumber++;
+            }
+        }
     }
 
     /**
@@ -234,5 +432,6 @@ public class P2 {
             my_token = my_scanner.next_token();
         } // end while
         outFile.close();
+        CharNum.num = 1;
     }
 }
