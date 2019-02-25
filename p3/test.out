@@ -1,0 +1,93 @@
+int a;
+bool b;
+void c;
+struct s {
+    int a;
+    bool b;
+    void c;
+};
+void func() {
+    int a;
+    bool b;
+    void c;
+}
+void func(int a, int b) {
+    int a;
+    bool b;
+    void c;
+    a = b = c;
+    d = (!true);
+    a = c = (((((a > b) && (a < b)) || ((a <= b) && ((!a) >= b))) || (!(a != b))) || ((a + (b * c)) - (((d / e) * k) / (!b))));
+    c++;
+    c--;
+    result = "zzy";
+    result = ((((((a.b).c).d).e).f).g);
+    result = 1;
+    result = true;
+    result = false;
+    result = (c > 1);
+    result = (c < 1);
+    result = (c >= 1);
+    result = (c <= 1);
+    result = (c == c);
+    result = (c != c);
+    result = (c + 2);
+    result = (c / 2);
+    result = (c * 2);
+    result = (c - 2);
+    result = (c && c);
+    result = ((c || c) || c);
+    result = (!c);
+    result = (-c);
+    cin >> i;
+    cout << b;
+    return;
+    return a;
+    return sort(a, sort(a, (b + (c * d))));
+    return sort();
+    repeat (true) {
+        x = ((4 + (3 * 5)) - y);
+    }
+    while (true) {
+        y = ((y * 2) + x);
+    }
+    if ((b == (-1))) {
+        x = ((4 + (3 * 5)) - y);
+        while (c) {
+            y = ((y * 2) + x);
+        }
+    }
+    if ((b == (-1))) {
+        x = ((4 + (3 * 5)) - y);
+        while (c) {
+            y = ((y * 2) + x);
+        }
+    }
+    else {
+        x = 0;
+    }
+}
+int N;
+int INF;
+int n;
+int main() {
+    int la;
+    int nw;
+    cin >> n;
+    while (false) {
+        cin >> num;
+        (p.first) = num;
+        (p.second) = i;
+    }
+    sort((p + 1), ((p + n) + 1));
+    if (true) {
+        swap(la, nw);
+        fill((dp + 1), ((dp + n) + 1), INF);
+        while (false) {
+            pmin = min(pmin, dp);
+            dp = (pmin + abs((cur_num - (p.first))));
+        }
+    }
+    res = min(res, dp);
+    cout << res;
+}
