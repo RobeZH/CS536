@@ -25,3 +25,8 @@ hs_err_pid*
 .DS_Store
 .idea
 out
+
+*.jlex.java
+test.out
+parser.java
+sym.java
