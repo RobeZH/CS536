@@ -4,20 +4,16 @@ import java_cup.runtime.*;
 /**
  * %This is the main program to test the Carrot parser.%
  *
- * There should be 2 command-line arguments:
- *    1. the file to be parsed
- *    2. the output file into which the AST built by the parser should be
- *       unparsed
+ * There should be 2 command-line arguments: 1. the file to be parsed 2. the
+ * output file into which the AST built by the parser should be unparsed
  */
 
 public class P4 {
-    public static void main(String[] args)
-        throws IOException // may be thrown by the scanner
-    {
+    public static void main(String[] args) throws IOException // may be thrown by the scanner
+            , EmptySymTableException, WrongArgumentException {
         // check for command-line args
         if (args.length != 2) {
-            System.err.println("please supply name of file to be parsed " +
-			                   "and name of file for unparsed version.");
+            System.err.println("please supply name of file to be parsed " + "and name of file for unparsed version.");
             System.exit(-1);
         }
 
@@ -35,8 +31,7 @@ public class P4 {
         try {
             outFile = new PrintWriter(args[1]);
         } catch (FileNotFoundException ex) {
-            System.err.println("File " + args[1] +
-                               " could not be opened for writing.");
+            System.err.println("File " + args[1] + " could not be opened for writing.");
             System.exit(-1);
         }
 
@@ -48,14 +43,16 @@ public class P4 {
 
         try {
             root = P.parse(); // do the parse
-            System.out.println ("program parsed correctly.");
-        } catch (Exception ex){
+            System.out.println("program parsed correctly.");
+        } catch (Exception ex) {
             System.err.println("Exception occured during parse: " + ex);
             System.exit(-1);
         }
 
-	// ADD NAME ANALYSIS PART HERE
-        ((ASTnode)root.value).unparse(outFile, 0);
+        // ADD NAME ANALYSIS PART HERE
+        SymTable symTable = new SymTable();
+        ((ProgramNode) root.value).analyze(symTable);
+        ((ASTnode) root.value).unparse(outFile, 0);
         outFile.close();
 
         return;

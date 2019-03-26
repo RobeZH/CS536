@@ -1,5 +1,8 @@
-import java.io.*;
-import java.util.*;
+import java.io.PrintWriter;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 // **********************************************************************
 // The ASTnode class defines the nodes of the abstract-syntax tree that
@@ -107,94 +110,125 @@ import java.util.*;
 // %%%ASTnode class (base class for all other kinds of nodes)
 // **********************************************************************
 
-abstract class ASTnode { 
+abstract class ASTnode {
     // every subclass must provide an unparse operation
     abstract public void unparse(PrintWriter p, int indent);
 
     // this method can be used by the unparse methods to do indenting
     protected void addIndent(PrintWriter p, int indent) {
-        for (int k = 0; k < indent; k++) p.print(" ");
+        for (int k = 0; k < indent; k++)
+            p.print(" ");
     }
 }
 
 // **********************************************************************
-// ProgramNode,  DeclListNode, FormalsListNode, FnBodyNode,
+// ProgramNode, DeclListNode, FormalsListNode, FnBodyNode,
 // StmtListNode, ExpListNode
 // **********************************************************************
 
 class ProgramNode extends ASTnode {
+    // 1 kid
+    private DeclListNode myDeclList;
+
     public ProgramNode(DeclListNode L) {
         myDeclList = L;
+    }
+
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myDeclList.analyze(symTable);
     }
 
     public void unparse(PrintWriter p, int indent) {
         myDeclList.unparse(p, indent);
     }
-
-    // 1 kid
-    private DeclListNode myDeclList;
 }
 
 class DeclListNode extends ASTnode {
+    // list of kids (DeclNodes)
+    private List<DeclNode> myDecls;
+
     public DeclListNode(List<DeclNode> S) {
         myDecls = S;
     }
 
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        for (DeclNode myDecl : myDecls) {
+            myDecl.analyze(symTable);
+        }
+    }
+
     public void unparse(PrintWriter p, int indent) {
-        Iterator it = myDecls.iterator();
+        Iterator<DeclNode> it = myDecls.iterator();
         try {
             while (it.hasNext()) {
-                ((DeclNode)it.next()).unparse(p, indent);
+                ((DeclNode) it.next()).unparse(p, indent);
             }
         } catch (NoSuchElementException ex) {
             System.err.println("unexpected NoSuchElementException in DeclListNode.print");
             System.exit(-1);
         }
     }
-
-    // list of kids (DeclNodes)
-    private List<DeclNode> myDecls;
 }
 
 class FormalsListNode extends ASTnode {
+    // list of kids (FormalDeclNodes)
+    private List<FormalDeclNode> myFormals;
+
     public FormalsListNode(List<FormalDeclNode> S) {
         myFormals = S;
+    }
+
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        for (FormalDeclNode fdNode : myFormals) {
+            fdNode.analyze(symTable);
+        }
     }
 
     public void unparse(PrintWriter p, int indent) {
         Iterator<FormalDeclNode> it = myFormals.iterator();
         if (it.hasNext()) { // if there is at least one element
             it.next().unparse(p, indent);
-            while (it.hasNext()) {  // print the rest of the list
+            while (it.hasNext()) { // print the rest of the list
                 p.print(", ");
                 it.next().unparse(p, indent);
             }
-        } 
+        }
     }
-
-    // list of kids (FormalDeclNodes)
-    private List<FormalDeclNode> myFormals;
 }
 
 class FnBodyNode extends ASTnode {
+    // 2 kids
+    private DeclListNode myDeclList;
+    private StmtListNode myStmtList;
+
     public FnBodyNode(DeclListNode declList, StmtListNode stmtList) {
         myDeclList = declList;
         myStmtList = stmtList;
+    }
+
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myDeclList.analyze(symTable);
+        myStmtList.analyze(symTable);
     }
 
     public void unparse(PrintWriter p, int indent) {
         myDeclList.unparse(p, indent);
         myStmtList.unparse(p, indent);
     }
-
-    // 2 kids
-    private DeclListNode myDeclList;
-    private StmtListNode myStmtList;
 }
 
 class StmtListNode extends ASTnode {
+    // list of kids (StmtNodes)
+    private List<StmtNode> myStmts;
+
     public StmtListNode(List<StmtNode> S) {
         myStmts = S;
+    }
+
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        for (StmtNode e : myStmts) {
+            e.analyze(symTable);
+        }
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -203,29 +237,32 @@ class StmtListNode extends ASTnode {
             it.next().unparse(p, indent);
         }
     }
-
-    // list of kids (StmtNodes)
-    private List<StmtNode> myStmts;
 }
 
 class ExpListNode extends ASTnode {
+    // list of kids (ExpNodes)
+    private List<ExpNode> myExps;
+
     public ExpListNode(List<ExpNode> S) {
         myExps = S;
+    }
+
+    public void checkDefined(SymTable symTable) throws EmptySymTableException {
+        for (ExpNode e : myExps) {
+            e.checkDefined(symTable);
+        }
     }
 
     public void unparse(PrintWriter p, int indent) {
         Iterator<ExpNode> it = myExps.iterator();
         if (it.hasNext()) { // if there is at least one element
             it.next().unparse(p, indent);
-            while (it.hasNext()) {  // print the rest of the list
+            while (it.hasNext()) { // print the rest of the list
                 p.print(", ");
                 it.next().unparse(p, indent);
             }
-        } 
+        }
     }
-
-    // list of kids (ExpNodes)
-    private List<ExpNode> myExps;
 }
 
 // **********************************************************************
@@ -233,13 +270,32 @@ class ExpListNode extends ASTnode {
 // **********************************************************************
 
 abstract class DeclNode extends ASTnode {
+    abstract public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException;
 }
 
 class VarDeclNode extends DeclNode {
+    public static int NOT_STRUCT = -1;
+    // 3 kids
+    private TypeNode myType;
+    private IdNode myId;
+    private int mySize; // use value NOT_STRUCT if this is not a struct type
+
     public VarDeclNode(TypeNode type, IdNode id, int size) {
         myType = type;
         myId = id;
         mySize = size;
+    }
+
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        Sym sym = symTable.lookupLocal(myId.toString());
+        if (sym != null && sym.getCategory().equals(Category.FORMAL))
+            return;
+
+        if (mySize == NOT_STRUCT)
+            myId.addAndAnalyzeDecl(symTable, myType.toString(), Category.NORMAL);
+        else
+            myId.addAndAnalyzeDecl(symTable, myType.toString(), Category.STRUCT);
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -249,24 +305,29 @@ class VarDeclNode extends DeclNode {
         myId.unparse(p, 0);
         p.println(";");
     }
-
-    // 3 kids
-    private TypeNode myType;
-    private IdNode myId;
-    private int mySize;  // use value NOT_STRUCT if this is not a struct type
-
-    public static int NOT_STRUCT = -1;
 }
 
 class FnDeclNode extends DeclNode {
-    public FnDeclNode(TypeNode type,
-                      IdNode id,
-                      FormalsListNode formalList,
-                      FnBodyNode body) {
+    // 4 kids
+    private TypeNode myType;
+    private IdNode myId;
+    private FormalsListNode myFormalsList;
+    private FnBodyNode myBody;
+
+    public FnDeclNode(TypeNode type, IdNode id, FormalsListNode formalList, FnBodyNode body) {
         myType = type;
         myId = id;
         myFormalsList = formalList;
         myBody = body;
+    }
+
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myId.addAndAnalyzeDecl(symTable, myType.toString(), Category.FUNCTION);
+        symTable.addScope();
+        myFormalsList.analyze(symTable);
+        myBody.analyze(symTable);
+        symTable.removeScope();
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -277,18 +338,16 @@ class FnDeclNode extends DeclNode {
         p.print("(");
         myFormalsList.unparse(p, 0);
         p.println(") {");
-        myBody.unparse(p, indent+4);
+        myBody.unparse(p, indent + 4);
         p.println("}\n");
     }
-
-    // 4 kids
-    private TypeNode myType;
-    private IdNode myId;
-    private FormalsListNode myFormalsList;
-    private FnBodyNode myBody;
 }
 
 class FormalDeclNode extends DeclNode {
+    // 2 kids
+    private TypeNode myType;
+    private IdNode myId;
+
     public FormalDeclNode(TypeNode type, IdNode id) {
         myType = type;
         myId = id;
@@ -300,12 +359,18 @@ class FormalDeclNode extends DeclNode {
         myId.unparse(p, 0);
     }
 
-    // 2 kids
-    private TypeNode myType;
-    private IdNode myId;
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myId.addAndAnalyzeDecl(symTable, myType.toString(), Category.FORMAL);
+    }
 }
 
 class StructDeclNode extends DeclNode {
+    private static String TYPE = "struct";
+
+    private IdNode myId;
+    private DeclListNode myDeclList;
+
     public StructDeclNode(IdNode id, DeclListNode declList) {
         myId = id;
         myDeclList = declList;
@@ -316,15 +381,20 @@ class StructDeclNode extends DeclNode {
         p.print("struct ");
         myId.unparse(p, 0);
         p.println("{");
-        myDeclList.unparse(p, indent+4);
+        myDeclList.unparse(p, indent + 4);
         addIndent(p, indent);
         p.println("};\n");
 
     }
 
-    // 2 kids
-    private IdNode myId;
-    private DeclListNode myDeclList;
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        if (myId.addAndAnalyzeDecl(symTable, TYPE, Category.STRUCT) == false)
+            return;
+        symTable.addScope();
+        myDeclList.analyze(symTable);
+        symTable.removeScope();
+    }
 }
 
 // **********************************************************************
@@ -332,6 +402,7 @@ class StructDeclNode extends DeclNode {
 // **********************************************************************
 
 abstract class TypeNode extends ASTnode {
+
 }
 
 class IntNode extends TypeNode {
@@ -340,6 +411,11 @@ class IntNode extends TypeNode {
 
     public void unparse(PrintWriter p, int indent) {
         p.print("int");
+    }
+
+    @Override
+    public String toString() {
+        return "int";
     }
 }
 
@@ -350,6 +426,11 @@ class BoolNode extends TypeNode {
     public void unparse(PrintWriter p, int indent) {
         p.print("bool");
     }
+
+    @Override
+    public String toString() {
+        return "bool";
+    }
 }
 
 class VoidNode extends TypeNode {
@@ -359,9 +440,17 @@ class VoidNode extends TypeNode {
     public void unparse(PrintWriter p, int indent) {
         p.print("void");
     }
+
+    @Override
+    public String toString() {
+        return "void";
+    }
 }
 
 class StructNode extends TypeNode {
+    // 1 kid
+    private IdNode myId;
+
     public StructNode(IdNode id) {
         myId = id;
     }
@@ -370,9 +459,11 @@ class StructNode extends TypeNode {
         p.print("struct ");
         myId.unparse(p, 0);
     }
-    
-    // 1 kid
-    private IdNode myId;
+
+    @Override
+    public String toString() {
+        return myId.toString();
+    }
 }
 
 // **********************************************************************
@@ -380,9 +471,13 @@ class StructNode extends TypeNode {
 // **********************************************************************
 
 abstract class StmtNode extends ASTnode {
+    abstract public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException;
 }
 
 class AssignStmtNode extends StmtNode {
+    // 1 kid
+    private AssignNode myAssign;
+
     public AssignStmtNode(AssignNode assign) {
         myAssign = assign;
     }
@@ -393,11 +488,16 @@ class AssignStmtNode extends StmtNode {
         p.println(";");
     }
 
-    // 1 kid
-    private AssignNode myAssign;
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myAssign.checkDefined(symTable);
+    }
 }
 
 class PostIncStmtNode extends StmtNode {
+    // 1 kid
+    private ExpNode myExp;
+
     public PostIncStmtNode(ExpNode exp) {
         myExp = exp;
     }
@@ -408,11 +508,16 @@ class PostIncStmtNode extends StmtNode {
         p.println("++;");
     }
 
-    // 1 kid
-    private ExpNode myExp;
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myExp.checkDefined(symTable);
+    }
 }
 
 class PostDecStmtNode extends StmtNode {
+    // 1 kid
+    private ExpNode myExp;
+
     public PostDecStmtNode(ExpNode exp) {
         myExp = exp;
     }
@@ -423,11 +528,16 @@ class PostDecStmtNode extends StmtNode {
         p.println("--;");
     }
 
-    // 1 kid
-    private ExpNode myExp;
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myExp.checkDefined(symTable);
+    }
 }
 
 class ReadStmtNode extends StmtNode {
+    // 1 kid (actually can only be an IdNode or an ArrayExpNode)
+    private ExpNode myExp;
+
     public ReadStmtNode(ExpNode e) {
         myExp = e;
     }
@@ -439,11 +549,16 @@ class ReadStmtNode extends StmtNode {
         p.println(";");
     }
 
-    // 1 kid (actually can only be an IdNode or an ArrayExpNode)
-    private ExpNode myExp;
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myExp.checkDefined(symTable);
+    }
 }
 
 class WriteStmtNode extends StmtNode {
+    // 1 kid
+    private ExpNode myExp;
+
     public WriteStmtNode(ExpNode exp) {
         myExp = exp;
     }
@@ -455,11 +570,18 @@ class WriteStmtNode extends StmtNode {
         p.println(";");
     }
 
-    // 1 kid
-    private ExpNode myExp;
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myExp.checkDefined(symTable);
+    }
 }
 
 class IfStmtNode extends StmtNode {
+    // e kids
+    private ExpNode myExp;
+    private DeclListNode myDeclList;
+    private StmtListNode myStmtList;
+
     public IfStmtNode(ExpNode exp, DeclListNode dlist, StmtListNode slist) {
         myDeclList = dlist;
         myExp = exp;
@@ -471,23 +593,34 @@ class IfStmtNode extends StmtNode {
         p.print("if (");
         myExp.unparse(p, 0);
         p.println(") {");
-        myDeclList.unparse(p, indent+4);
-        myStmtList.unparse(p, indent+4);
+        myDeclList.unparse(p, indent + 4);
+        myStmtList.unparse(p, indent + 4);
         addIndent(p, indent);
         p.println("}");
     }
 
-    // e kids
-    private ExpNode myExp;
-    private DeclListNode myDeclList;
-    private StmtListNode myStmtList;
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myExp.checkDefined(symTable);
+        symTable.addScope();
+        myDeclList.analyze(symTable);
+        myStmtList.analyze(symTable);
+        symTable.removeScope();
+    }
 }
 
 class IfElseStmtNode extends StmtNode {
-    public IfElseStmtNode(ExpNode exp, DeclListNode dlist1,
-                          StmtListNode slist1, DeclListNode dlist2,
-                          StmtListNode slist2) {
+    // 5 kids
+    private ExpNode myExp;
+    private DeclListNode myThenDeclList;
+    private StmtListNode myThenStmtList;
+    private StmtListNode myElseStmtList;
+    private DeclListNode myElseDeclList;
+
+    public IfElseStmtNode(ExpNode exp, DeclListNode dlist1, StmtListNode slist1, DeclListNode dlist2,
+            StmtListNode slist2) {
         myExp = exp;
+
         myThenDeclList = dlist1;
         myThenStmtList = slist1;
         myElseDeclList = dlist2;
@@ -499,75 +632,102 @@ class IfElseStmtNode extends StmtNode {
         p.print("if (");
         myExp.unparse(p, 0);
         p.println(") {");
-        myThenDeclList.unparse(p, indent+4);
-        myThenStmtList.unparse(p, indent+4);
+        myThenDeclList.unparse(p, indent + 4);
+        myThenStmtList.unparse(p, indent + 4);
         addIndent(p, indent);
         p.println("}");
         addIndent(p, indent);
         p.println("else {");
-        myElseDeclList.unparse(p, indent+4);
-        myElseStmtList.unparse(p, indent+4);
+        myElseDeclList.unparse(p, indent + 4);
+        myElseStmtList.unparse(p, indent + 4);
         addIndent(p, indent);
-        p.println("}");        
+        p.println("}");
     }
 
-    // 5 kids
-    private ExpNode myExp;
-    private DeclListNode myThenDeclList;
-    private StmtListNode myThenStmtList;
-    private StmtListNode myElseStmtList;
-    private DeclListNode myElseDeclList;
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myExp.checkDefined(symTable);
+        symTable.addScope();
+        myThenDeclList.analyze(symTable);
+        myThenStmtList.analyze(symTable);
+        symTable.removeScope();
+        symTable.addScope();
+        myElseStmtList.analyze(symTable);
+        myElseDeclList.analyze(symTable);
+        symTable.removeScope();
+    }
 }
 
 class WhileStmtNode extends StmtNode {
+    // 3 kids
+    private ExpNode myExp;
+    private DeclListNode myDeclList;
+    private StmtListNode myStmtList;
+
     public WhileStmtNode(ExpNode exp, DeclListNode dlist, StmtListNode slist) {
         myExp = exp;
         myDeclList = dlist;
         myStmtList = slist;
     }
-    
+
     public void unparse(PrintWriter p, int indent) {
         addIndent(p, indent);
         p.print("while (");
         myExp.unparse(p, 0);
         p.println(") {");
-        myDeclList.unparse(p, indent+4);
-        myStmtList.unparse(p, indent+4);
+        myDeclList.unparse(p, indent + 4);
+        myStmtList.unparse(p, indent + 4);
         addIndent(p, indent);
         p.println("}");
     }
 
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myExp.checkDefined(symTable);
+        symTable.addScope();
+        myDeclList.analyze(symTable);
+        myStmtList.analyze(symTable);
+        symTable.removeScope();
+    }
+}
+
+class RepeatStmtNode extends StmtNode {
     // 3 kids
     private ExpNode myExp;
     private DeclListNode myDeclList;
     private StmtListNode myStmtList;
-}
 
-class RepeatStmtNode extends StmtNode {
     public RepeatStmtNode(ExpNode exp, DeclListNode dlist, StmtListNode slist) {
         myExp = exp;
         myDeclList = dlist;
         myStmtList = slist;
     }
-	
+
     public void unparse(PrintWriter p, int indent) {
-	addIndent(p, indent);
+        addIndent(p, indent);
         p.print("repeat (");
         myExp.unparse(p, 0);
         p.println(") {");
-        myDeclList.unparse(p, indent+4);
-        myStmtList.unparse(p, indent+4);
+        myDeclList.unparse(p, indent + 4);
+        myStmtList.unparse(p, indent + 4);
         addIndent(p, indent);
         p.println("}");
     }
 
-    // 3 kids
-    private ExpNode myExp;
-    private DeclListNode myDeclList;
-    private StmtListNode myStmtList;
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myExp.checkDefined(symTable);
+        symTable.addScope();
+        myDeclList.analyze(symTable);
+        myStmtList.analyze(symTable);
+        symTable.removeScope();
+    }
 }
 
 class CallStmtNode extends StmtNode {
+    // 1 kid
+    private CallExpNode myCall;
+
     public CallStmtNode(CallExpNode call) {
         myCall = call;
     }
@@ -578,11 +738,16 @@ class CallStmtNode extends StmtNode {
         p.println(";");
     }
 
-    // 1 kid
-    private CallExpNode myCall;
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        myCall.checkDefined(symTable);
+    }
 }
 
 class ReturnStmtNode extends StmtNode {
+    // 1 kid
+    private ExpNode myExp; // possibly null
+
     public ReturnStmtNode(ExpNode exp) {
         myExp = exp;
     }
@@ -597,8 +762,11 @@ class ReturnStmtNode extends StmtNode {
         p.println(";");
     }
 
-    // 1 kid
-    private ExpNode myExp; // possibly null
+    @Override
+    public void analyze(SymTable symTable) throws EmptySymTableException, WrongArgumentException {
+        if (myExp != null)
+            myExp.checkDefined(symTable);
+    }
 }
 
 // **********************************************************************
@@ -606,9 +774,16 @@ class ReturnStmtNode extends StmtNode {
 // **********************************************************************
 
 abstract class ExpNode extends ASTnode {
+    public void checkDefined(SymTable symTable) throws EmptySymTableException {
+        // pass
+    };
 }
 
 class IntLitNode extends ExpNode {
+    private int myLineNum;
+    private int myCharNum;
+    private int myIntVal;
+
     public IntLitNode(int lineNum, int charNum, int intVal) {
         myLineNum = lineNum;
         myCharNum = charNum;
@@ -618,13 +793,13 @@ class IntLitNode extends ExpNode {
     public void unparse(PrintWriter p, int indent) {
         p.print(myIntVal);
     }
-
-    private int myLineNum;
-    private int myCharNum;
-    private int myIntVal;
 }
 
 class StringLitNode extends ExpNode {
+    private int myLineNum;
+    private int myCharNum;
+    private String myStrVal;
+
     public StringLitNode(int lineNum, int charNum, String strVal) {
         myLineNum = lineNum;
         myCharNum = charNum;
@@ -634,13 +809,12 @@ class StringLitNode extends ExpNode {
     public void unparse(PrintWriter p, int indent) {
         p.print(myStrVal);
     }
-
-    private int myLineNum;
-    private int myCharNum;
-    private String myStrVal;
 }
 
 class TrueNode extends ExpNode {
+    private int myLineNum;
+    private int myCharNum;
+
     public TrueNode(int lineNum, int charNum) {
         myLineNum = lineNum;
         myCharNum = charNum;
@@ -649,12 +823,12 @@ class TrueNode extends ExpNode {
     public void unparse(PrintWriter p, int indent) {
         p.print("true");
     }
-
-    private int myLineNum;
-    private int myCharNum;
 }
 
 class FalseNode extends ExpNode {
+    private int myLineNum;
+    private int myCharNum;
+
     public FalseNode(int lineNum, int charNum) {
         myLineNum = lineNum;
         myCharNum = charNum;
@@ -663,30 +837,81 @@ class FalseNode extends ExpNode {
     public void unparse(PrintWriter p, int indent) {
         p.print("false");
     }
-
-    private int myLineNum;
-    private int myCharNum;
 }
 
 class IdNode extends ExpNode {
+    private int myLineNum;
+    private int myCharNum;
+    private String myStrVal;
+
     public IdNode(int lineNum, int charNum, String strVal) {
         myLineNum = lineNum;
         myCharNum = charNum;
         myStrVal = strVal;
     }
 
+    public boolean addAndAnalyzeDecl(SymTable symTable, String type, Category category)
+            throws EmptySymTableException, WrongArgumentException {
+
+        boolean success = true;
+
+        if (!category.equals(Category.FUNCTION) && type.equals("void")) {
+            ASTHelper.nonFunctionDeclaredVoid(myLineNum, myCharNum);
+            success = false;
+        }
+
+        Sym sym;
+
+        switch (category) {
+        case STRUCT:
+            sym = new StructSym(type);
+            break;
+        case NORMAL:
+            sym = new Sym(type);
+            break;
+        case FUNCTION:
+            sym = new FunctionSym(type);
+            break;
+        case FORMAL:
+            sym = new FormalSym(type);
+            break;
+        default:
+            sym = new Sym(type);
+        }
+
+        try {
+            symTable.addDecl(myStrVal, sym);
+        } catch (DuplicateSymException e) {
+            ASTHelper.multiplyDeclaredIdentifier(myLineNum, myCharNum);
+            success = false;
+        }
+
+        return success;
+    }
+
+    @Override
+    public void checkDefined(SymTable symTable) {
+        if (symTable.lookupGlobal(myStrVal) == null)
+            ASTHelper.undeclaredIdentifier(myLineNum, myCharNum);
+    }
+
     public void unparse(PrintWriter p, int indent) {
         p.print(myStrVal);
     }
 
-    private int myLineNum;
-    private int myCharNum;
-    private String myStrVal;
+    @Override
+    public String toString() {
+        return myStrVal;
+    }
 }
 
 class DotAccessExpNode extends ExpNode {
+    // 2 kids
+    private ExpNode myLoc;
+    private IdNode myId;
+
     public DotAccessExpNode(ExpNode loc, IdNode id) {
-        myLoc = loc;    
+        myLoc = loc;
         myId = id;
     }
 
@@ -696,32 +921,40 @@ class DotAccessExpNode extends ExpNode {
         p.print(").");
         myId.unparse(p, 0);
     }
-
-    // 2 kids
-    private ExpNode myLoc;    
-    private IdNode myId;
 }
 
 class AssignNode extends ExpNode {
+    // 2 kids
+    private ExpNode myLhs;
+    private ExpNode myExp;
+
     public AssignNode(ExpNode lhs, ExpNode exp) {
         myLhs = lhs;
         myExp = exp;
     }
 
     public void unparse(PrintWriter p, int indent) {
-        if (indent != -1)  p.print("(");
+        if (indent != -1)
+            p.print("(");
         myLhs.unparse(p, 0);
         p.print(" = ");
         myExp.unparse(p, 0);
-        if (indent != -1)  p.print(")");
+        if (indent != -1)
+            p.print(")");
     }
 
-    // 2 kids
-    private ExpNode myLhs;
-    private ExpNode myExp;
+    @Override
+    public void checkDefined(SymTable symTable) throws EmptySymTableException {
+        myLhs.checkDefined(symTable);
+        myExp.checkDefined(symTable);
+    }
 }
 
 class CallExpNode extends ExpNode {
+    // 2 kids
+    private IdNode myId;
+    private ExpListNode myExpList; // possibly null
+
     public CallExpNode(IdNode name, ExpListNode elist) {
         myId = name;
         myExpList = elist;
@@ -742,29 +975,42 @@ class CallExpNode extends ExpNode {
         p.print(")");
     }
 
-    // 2 kids
-    private IdNode myId;
-    private ExpListNode myExpList;  // possibly null
+    @Override
+    public void checkDefined(SymTable symTable) throws EmptySymTableException {
+        myId.checkDefined(symTable);
+        myExpList.checkDefined(symTable);
+    }
 }
 
 abstract class UnaryExpNode extends ExpNode {
+    // one child
+    protected ExpNode myExp;
+
     public UnaryExpNode(ExpNode exp) {
         myExp = exp;
     }
 
-    // one child
-    protected ExpNode myExp;
+    @Override
+    public void checkDefined(SymTable symTable) throws EmptySymTableException {
+        myExp.checkDefined(symTable);
+    }
 }
 
 abstract class BinaryExpNode extends ExpNode {
+    // two kids
+    protected ExpNode myExp1;
+    protected ExpNode myExp2;
+
     public BinaryExpNode(ExpNode exp1, ExpNode exp2) {
         myExp1 = exp1;
         myExp2 = exp2;
     }
 
-    // two kids
-    protected ExpNode myExp1;
-    protected ExpNode myExp2;
+    @Override
+    public void checkDefined(SymTable symTable) throws EmptySymTableException {
+        myExp1.checkDefined(symTable);
+        myExp2.checkDefined(symTable);
+    }
 }
 
 // **********************************************************************

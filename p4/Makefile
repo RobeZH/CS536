@@ -53,6 +53,9 @@ WrongArgumentException.class: WrongArgumentException.java
 EmptySymTableException.class: EmptySymTableException.java
 	$(JC) $(FLAGS) -cp $(CP) EmptySymTableException.java
 
+ASTHelper.class: ASTHelper.java
+	$(JC) $(FLAGS) -cp $(CP) ASTHelper.java
+
 ##test
 test:
 	java -cp $(CP) P4 nameErrors.crrt nameErrors.out
