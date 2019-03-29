@@ -1,0 +1,44 @@
+// // int a;                           //
+// // int a;                           // Multiply declared identifier
+// // bool a;                          // Multiply declared identifier
+// // int a() {}                       // Multiply declared identifier
+// // struct a {                       // Multiply declared identifier
+// //   int a;                         //
+// // };                               //
+// // int mul_func() {}                //
+// // int mul_func() {}                // Multiply declared identifier
+// // int mul_formal(int d, int d) {}  // Multiply declared identifier
+// // int mul_body() {                 //
+// //   int a;                         //
+// //   int a;                         // Multiply declared identifier
+// //   int k;                         //
+// //   int k;                         // Multiply declared identifier
+// // }
+
+// // void b;                   // Non-function declared void
+// // void a;                   // Non-function declared void
+// //                           // Multiply declared identifier
+// // int test_void(void c) {}  // Non-function declared void
+
+// // struct test_struct_1 {  //
+// //   int a;                //
+// //   int a;                // Multiply declared identifier
+// //   bool a;               // Multiply declared identifier
+// //   void a;               // Multiply declared identifier
+// //                         // Non-function declared void
+// // };                      //
+// //                         //
+// // struct test_struct_1 {  // Multiply declared identifier
+// //   int a;                //
+// //   bool a;               // Multiply declared identifier
+// // };                      //
+
+// struct test_struct_2 {  //
+//   int a;                //
+// };                      //
+
+// int test_struct_function() {
+//   struct test_struct_2 str;
+//   int b;
+//   b = str.a;
+// }

@@ -1,0 +1,17 @@
+int main() {
+  int a;
+  if (a == 1) {
+    a = 3;
+    return a;
+  }
+
+  if (a == 1) {
+    int a;
+    if (a == 1) {
+      int a;
+      a = 4;
+    }
+  }
+}
+
+int mul_formal_body(int zwx) { int zwx; }
