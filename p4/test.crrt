@@ -12,18 +12,24 @@ void g() {
   f(a + p.y * 2, b);
   g();
 }
-int h(int h) { int h; }
-
-if (a == 1) {
-  a = 3;
-  return a;
+int h(int h) {
+  int h; 
+  h = 5;
+  while (5 == 3){}
+  repeat (h == 3){}
 }
-int main {
+int main() {
+  int a;
   if (a == 1) {
     int a;
     if (a == 1) {
       int a;
+      int c;
       a = 4;
+    } else {
+      int a;
+      int b;
+      a = a;
     }
   }
 }
