@@ -1,4 +1,4 @@
-public class ASTHelper {
+public class ErrorReporter {
     public static void multiplyDeclaredIdentifier(int lineNum, int charNum) {
         ErrMsg.fatal(lineNum, charNum, "Multiply declared identifier");
     }
