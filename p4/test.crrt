@@ -13,10 +13,11 @@ void g() {
   g();
 }
 int h(int h) {
-  int h; 
+  int h;
   h = 5;
-  while (5 == 3){}
-  repeat (h == 3){}
+  while (5 == 3) {
+  }
+  repeat(h == 3) {}
 }
 int main() {
   int a;
@@ -32,4 +33,16 @@ int main() {
       a = a;
     }
   }
+  while (a == 1) {
+    int b;
+    while (b < a) {
+      int a;
+      int c;
+      a = 1;
+      while (c == 1) {
+        cout << a;
+      }
+    }
+  }
+  cout << a;
 }
