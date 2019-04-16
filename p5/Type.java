@@ -1,8 +1,10 @@
 /**
- * Type class and its subclasses: 
- * ErrorType, IntType, BoolType, VoidType, StringType, FnType, StructType,
+ * Type class and its subclasses: ErrorType, IntType, BoolType, VoidType,
+ * StringType, FnType, StructType,
  */
 abstract public class Type {
+    public int lineNum;
+    public int charNum;
 
     /**
      * default constructor
@@ -10,10 +12,16 @@ abstract public class Type {
     public Type() {
     }
 
+    public Type(int lineNum, int charNum) {
+        this.lineNum = lineNum;
+        this.charNum = charNum;
+    }
+
     /**
      * every subclass must provide a toString method and an equals method
      */
     abstract public String toString();
+
     abstract public boolean equals(Type t);
 
     /**
@@ -34,7 +42,7 @@ abstract public class Type {
     public boolean isVoidType() {
         return false;
     }
-    
+
     public boolean isStringType() {
         return false;
     }
@@ -46,7 +54,7 @@ abstract public class Type {
     public boolean isStructType() {
         return false;
     }
-    
+
     public boolean isStructDefType() {
         return false;
     }
@@ -56,6 +64,10 @@ abstract public class Type {
 // ErrorType
 // **********************************************************************
 class ErrorType extends Type {
+
+    public ErrorType() {
+        super();
+    }
 
     public boolean isErrorType() {
         return true;
@@ -74,6 +86,13 @@ class ErrorType extends Type {
 // IntType
 // **********************************************************************
 class IntType extends Type {
+    public IntType() {
+        super();
+    }
+
+    public IntType(int lineNum, int charNum) {
+        super(lineNum, charNum);
+    }
 
     public boolean isIntType() {
         return true;
@@ -92,6 +111,13 @@ class IntType extends Type {
 // BoolType
 // **********************************************************************
 class BoolType extends Type {
+    public BoolType() {
+        super();
+    }
+
+    public BoolType(int lineNum, int charNum) {
+        super(lineNum, charNum);
+    }
 
     public boolean isBoolType() {
         return true;
@@ -111,6 +137,14 @@ class BoolType extends Type {
 // **********************************************************************
 class VoidType extends Type {
 
+    public VoidType() {
+        super();
+    }
+
+    public VoidType(int lineNum, int charNum) {
+        super(lineNum, charNum);
+    }
+
     public boolean isVoidType() {
         return true;
     }
@@ -128,6 +162,13 @@ class VoidType extends Type {
 // StringType
 // **********************************************************************
 class StringType extends Type {
+    public StringType() {
+        super();
+    }
+
+    public StringType(int lineNum, int charNum) {
+        super(lineNum, charNum);
+    }
 
     public boolean isStringType() {
         return true;
@@ -146,6 +187,13 @@ class StringType extends Type {
 // FnType
 // **********************************************************************
 class FnType extends Type {
+    public FnType() {
+        super();
+    }
+
+    public FnType(int lineNum, int charNum) {
+        super(lineNum, charNum);
+    }
 
     public boolean isFnType() {
         return true;
@@ -165,11 +213,19 @@ class FnType extends Type {
 // **********************************************************************
 class StructType extends Type {
     private IdNode myId;
-    
+
+    public StructType() {
+        super();
+    }
+
+    public StructType(int lineNum, int charNum) {
+        super(lineNum, charNum);
+    }
+
     public StructType(IdNode id) {
         myId = id;
     }
-    
+
     public boolean isStructType() {
         return true;
     }
@@ -187,6 +243,13 @@ class StructType extends Type {
 // StructDefType
 // **********************************************************************
 class StructDefType extends Type {
+    public StructDefType() {
+        super();
+    }
+
+    public StructDefType(int lineNum, int charNum) {
+        super(lineNum, charNum);
+    }
 
     public boolean isStructDefType() {
         return true;

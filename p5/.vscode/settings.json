@@ -4,5 +4,5 @@
         "java_cup": true,
         "Carrot.jlex.java": true
     },
-    "editor.formatOnSave": true
+    "java.debug.settings.forceBuildBeforeLaunch": false
 }
