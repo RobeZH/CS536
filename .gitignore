@@ -24,7 +24,5 @@ hs_err_pid*
 out
 
 *.jlex.java
+*/.vscode/ipch
 test.out
-parser.java
-sym.java
-.vscode

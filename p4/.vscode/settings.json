@@ -1,0 +1,6 @@
+{
+    "java.dependency.packagePresentation": "flat",
+    "files.associations": {
+        "*.crrt": "cpp"
+    }
+}
