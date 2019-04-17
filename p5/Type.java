@@ -71,6 +71,10 @@ class ErrorType extends Type {
         super();
     }
 
+    public ErrorType(int lineNum, int charNum) {
+        super(lineNum, charNum);
+    }
+
     public boolean isErrorType() {
         return true;
     }

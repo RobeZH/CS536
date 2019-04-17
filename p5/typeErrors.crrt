@@ -1,42 +1,297 @@
-bool bbb;
-struct S { int a; };
-struct S t;
+int i;
+bool b;
+struct P{ int x; int y;};
+struct P p;
+int f(){}
+int f1(int i){}
 
-void f(int p1, bool p2) {
+void fi(int i){}
+void fii(int i1, int i2){}
+void fib(int i, bool b){}
+void fbi(bool b, int i){}
+
+// Write
+void test_write(){
+    cout << f;        // Attempt to write a function
+    cout << P;    // Attempt to write a struct name  
+    cout << p;        // Attempt to write a struct variable  
+    cout << fi(i);    // Attempt to write void
 }
 
-void main() {
-    int aaa;
+// Read
+void test_read(){
+    cin >> f;      // Attempt to read a function
+    cin >> P;  // Attempt to read a struct name  
+    cin >> p ;     // Attempt to read a struct variable  
+}
 
-    // some errors involving illegal operations on functions
-    aaa = f + f;
-    bbb = f == 3;
-    bbb = f > main;
-    bbb = f == f;
+// Function calls
+void test_function_call(){
+    i();     // Attempt to call a non-function
+    b();     // Attempt to call a non-function
+    P(); // Attempt to call a non-function
+    p();     // Attempt to call a non-function
 
-    // some errors involving bad function calls 
-    aaa();
-    f();
-    f(5);
-    f(aaa, aaa);
-    f(t, t.a);
-    S();
+    f(b, i);            // Function call with wrong number of args 
+    f(i);               // Function call with wrong number of args 
+    fi(i, i);           // Function call with wrong number of args 
+    fi();               // Function call with wrong number of args 
+    fii(i, i, i, i, i); // Function call with wrong number of args 
 
-    // some errors involving structs 
-    t = 5;
-    t = t;
-    cin >> S;
-    t = true || 3;
-    bbb = S && t.a;
+    fib(b, i); // Type of actual does not match type of formal * 2
+    fbi(i, b); // Type of actual does not match type of formal * 2
+    fib(i, i); // Type of actual does not match type of formal * 1
+    fii(b, b); // Type of actual does not match type of formal * 2
+    fbi(b, b); // Type of actual does not match type of formal * 1
+}
 
-    // error involving return
-    return 10;
+// function return
+int f_i_1(){ return b; }     // Bad return value
+int f_i_2(){ return; }       // Missing return value
 
-    // other type errors 
-    aaa = aaa + (!false);
-    aaa = aaa + "foo";
-    bbb = aaa;
+bool f_b_1(){ return i; }    // Bad return value
+bool f_b_2(){ return; }      // Missing return value
 
-    // don't give too many or too few error messages here 
-    bbb = (aaa + true) && (bbb < true);
+void f_v_1(){ return i; }       // Return with a value in a void function
+void f_v_2(){ return b; }       // Return with a value in a void function
+void f_v_3(){ return i + b; }   // Arithmetic operator applied to non-numeric operand
+                                // Return with a value in a void function
+void f_v_4(){ return i(); }     // Attempt to call a non-function
+                                // Return with a value in a void function
+void f_v_5(){ return b || i; }  // Logical operator applied to non-bool operand
+                                // Return with a value in a void function
+
+// arithmetic
+void test_arithmetic() {
+    i = i + b;
+    i = i * b;
+    i = i / b;
+    i = i - b;
+    i = b + i;
+    i = b * i;
+    i = b / i;
+    i = b - i;
+    b++;
+    b--;
+
+    i = i + p;
+    i = i * p;
+    i = i / p;
+    i = i - p;
+    i = p + i;
+    i = p * i;
+    i = p / i;
+    i = p - i;
+    p++;
+    p--;
+
+    i = P + i;
+    i = P * i;
+    i = P / i;
+    i = P - i;
+    i = i + P;
+    i = i * P;
+    i = i / P;
+    i = i - P;
+    P++;
+    P--;
+
+    i = i + f;
+    i = i * f;
+    i = i / f;
+    i = i - f;
+    i = f + i;
+    i = f * i;
+    i = f / i;
+    i = f - i;
+    f++;
+    f--;
+}
+
+// logical
+void test_logical() {
+    b = !i;      // Logical operator applied to non-bool operand
+
+    b = i && b;  // Logical operator applied to non-bool operand
+    b = b && i;  // Logical operator applied to non-bool operand
+    b = i && i;  // Logical operator applied to non-bool operand * 2
+
+    b = i || b;  // Logical operator applied to non-bool operand
+    b = b || i;  // Logical operator applied to non-bool operand
+    b = i || i;  // Logical operator applied to non-bool operand * 2
+    
+
+
+
+    b = !p;      // Logical operator applied to non-bool operand
+
+    b = p && b;  // Logical operator applied to non-bool operand
+    b = b && p;  // Logical operator applied to non-bool operand
+    b = p && p;  // Logical operator applied to non-bool operand * 2
+
+    b = p || b;  // Logical operator applied to non-bool operand
+    b = b || p;  // Logical operator applied to non-bool operand
+    b = p || p;  // Logical operator applied to non-bool operand * 2
+
+
+
+
+    b = !P;         // Logical operator applied to non-bool operand
+
+    b = P && b;     // Logical operator applied to non-bool operand
+    b = b && P;     // Logical operator applied to non-bool operand
+    b = P && P;     // Logical operator applied to non-bool operand * 2
+
+    b = P || b;     // Logical operator applied to non-bool operand
+    b = b || P;     // Logical operator applied to non-bool operand
+    b = P || P;     // Logical operator applied to non-bool operand * 2
+
+
+
+
+    b = !f;      // Logical operator applied to non-bool operand
+
+    b = f && b;  // Logical operator applied to non-bool operand
+    b = b && f;  // Logical operator applied to non-bool operand
+    b = f && f;  // Logical operator applied to non-bool operand * 2
+
+    b = f || b;  // Logical operator applied to non-bool operand
+    b = b || f;  // Logical operator applied to non-bool operand
+    b = f || f;  // Logical operator applied to non-bool operand * 2
+}
+
+
+// relational
+void test_relational() {
+    b = i < b;  // Relational operator applied to non-numeric operand
+    b = i > b;  // Relational operator applied to non-numeric operand
+    b = i >= b; // Relational operator applied to non-numeric operand
+    b = i <= b; // Relational operator applied to non-numeric operand
+    b = b < i;  // Relational operator applied to non-numeric operand
+    b = b > i;  // Relational operator applied to non-numeric operand
+    b = b >= i; // Relational operator applied to non-numeric operand
+    b = b <= i; // Relational operator applied to non-numeric operand
+
+    b = p < b;  // Relational operator applied to non-numeric operand * 2
+    b = p > b;  // Relational operator applied to non-numeric operand * 2
+    b = p >= b; // Relational operator applied to non-numeric operand * 2
+    b = p <= b; // Relational operator applied to non-numeric operand * 2
+    b = b < p;  // Relational operator applied to non-numeric operand * 2
+    b = b > p;  // Relational operator applied to non-numeric operand * 2
+    b = b >= p; // Relational operator applied to non-numeric operand * 2
+    b = b <= p; // Relational operator applied to non-numeric operand * 2
+
+    b = P < b;  // Relational operator applied to non-numeric operand * 2
+    b = P > b;  // Relational operator applied to non-numeric operand * 2
+    b = P >= b; // Relational operator applied to non-numeric operand * 2
+    b = P <= b; // Relational operator applied to non-numeric operand * 2
+    b = b < P;  // Relational operator applied to non-numeric operand * 2
+    b = b > P;  // Relational operator applied to non-numeric operand * 2
+    b = b >= P; // Relational operator applied to non-numeric operand * 2
+    b = b <= P; // Relational operator applied to non-numeric operand * 2
+
+    b = f < b;  // Relational operator applied to non-numeric operand * 2
+    b = f > b;  // Relational operator applied to non-numeric operand * 2
+    b = f >= b; // Relational operator applied to non-numeric operand * 2
+    b = f <= b; // Relational operator applied to non-numeric operand * 2
+    b = b < f;  // Relational operator applied to non-numeric operand * 2
+    b = b > f;  // Relational operator applied to non-numeric operand * 2
+    b = b >= f; // Relational operator applied to non-numeric operand * 2
+    b = b <= f; // Relational operator applied to non-numeric operand * 2
+}
+
+
+// if 
+void test_if() {
+    if(i) { i = i; } // Non-bool expression used as an if condition
+    if(P) { i = i; } // Non-bool expression used as an if condition
+    if(p) { i = i; } // Non-bool expression used as an if condition
+    if(f) { i = i; } // Non-bool expression used as an if condition
+}
+
+
+// while
+void test_while() {
+    while(i) { i = i; } // Non-bool expression used as a while condition
+    while(P) { i = i; } // Non-bool expression used as a while condition
+    while(p) { i = i; } // Non-bool expression used as a while condition
+    while(f) { i = i; } // Non-bool expression used as a while condition
+}
+
+
+// repeat
+void test_repeat() {
+    repeat(b) { i = i; } // Non-integer expression used as a repeat clause
+    repeat(P) { i = i; } // Non-integer expression used as a repeat clause
+    repeat(p) { i = i; } // Non-integer expression used as a repeat clause
+    repeat(f) { i = i; } // Non-integer expression used as a repeat clause
+}
+
+// type mismatch
+void test_type_mismatch() {
+    i = b;  // Type mismatch
+    b = i;  // Type mismatch
+
+    b = b == i;          // Type mismatch
+    b = i == b;          // Type mismatch
+    i = ((b == i) == b); // Type mismatch * 2
+
+
+
+	f = b;  // Type mismatch
+    b = f;  // Type mismatch
+
+    b = b == f;          // Type mismatch
+    b = f == b;          // Type mismatch
+    f = ((b == f) == b); // Type mismatch * 2
+
+	
+    
+    p = b;  // Type mismatch
+    b = p;  // Type mismatch
+
+    b = b == p;          // Type mismatch
+    b = p == b;          // Type mismatch
+    p = ((b == p) == b); // Type mismatch * 2
+    
+    P = b;  // Type mismatch
+    b = P;  // Type mismatch
+
+    b = b == P;          // Type mismatch
+    b = P == b;          // Type mismatch
+    P = ((b == P) == b); // Type mismatch * 2
+}
+
+// Equality operator 
+void test_equality_operator() {
+    b = fi(i) == fii(i, i);  // Equality operator applied to void functions
+    b = fi == fii;           // Equality operator applied to functions
+    b = P == P;              // Equality operator applied to struct names
+    b = p == p;              // Equality operator applied to struct variables 
+}
+
+// Assignment
+void test_assignment() {
+    fi = fii;  // Function assignment
+    P = P;     // Struct name assignment 
+    p = p;     // Struct variable assignment
+}
+
+
+void main(){
+    cout << P + 1;              // P + 1 is an error; the write is OK
+    i = (true + 3) * 4;         // true + 3 is an error; the * is OK
+    i = true && (false || 3);   // false || 3 is an error; the && is OK
+    fi("a" * 4);                // "a" * 4 is an error; the call is OK
+    i = 1 + p();                // p() is an error; the + is OK
+    b = (true + 3) == i;        // true + 3 is an error; the == is OK
+                                // regardless of the type of x
+
+
+    i = true + "hello";      // one error for each of the non-int operands of the +
+    i = 1 + f1(true);        // one for the bad arg type and one for the 2nd operand of the +
+    i = 1 + fi(1, 2);        // one for the wrong number of args and one for the 2nd operand of the +
+    return 3+true;           // in a void function: one error for the 2nd operand to +
+                             // and one for returning a value
+
 }

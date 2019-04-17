@@ -143,8 +143,16 @@ public class P5 {
 		}
 		
 		astRoot.nameAnalysis();  // perform name analysis
+
+		if (ErrMsg.getErr()) {  
+			return P5.RESULT_SYNTAX_ERROR;
+		}
 		
 		astRoot.typeCheck();
+
+		if (ErrMsg.getErr()) {  
+			return P5.RESULT_TYPE_ERROR;
+		}
 		
 		astRoot.unparse(outFile, 0);
 		return P5.RESULT_CORRECT;

@@ -1,0 +1,101 @@
+int f(){}
+void fi(int i){}
+void fii(int i1, int i2){}
+void fib(int i, bool b){}
+void fbi(bool b, int i){}
+struct Point{ int x; int y;};
+
+struct Point p;
+int i;
+bool b;
+
+
+// write
+void test_write(){
+    cout << i;
+    cout << b;
+    cout << f();
+    cout << p.y;
+}
+
+// read
+void test_read(){
+    cin >> i;
+    cin >> b;
+    cin >> p.y;
+}
+
+// function calls
+void test_function_call(){
+    fi(i);
+    fii(i,i);
+    fib(i,b);
+    fbi(b,i);
+    fii(p.x, p.y);
+}
+
+// function return 
+int f_i_1(){ return i; }
+bool f_b_1(){ return b; } 
+void f_v_1(){ return; }
+int f_i_2(){}
+bool f_b_2(){}
+void f_v_2(){}
+
+// arithmetic
+void test_arithmetic() {
+    i = i + i;
+    i = i * i;
+    i = i - i;
+    i = i / i;
+    i++;
+    i--;
+}
+
+// logical
+void test_logical() {
+    b = !b;
+    b = b && b;
+    b = b || b;
+}
+
+// relational
+void test_relational() {
+    b = i < i;
+    b = i > i;
+    b = i <= i;
+    b = i >= i;
+}
+
+// if
+void test_if() {
+    if(b) { i = i; }
+}
+
+
+// while
+void test_while() {
+    while(b) { i = i; }
+}
+
+// repeat
+void test_repeat() {
+    repeat(i) { i = i; }
+}
+
+// equality operator 
+void test_equality_operator() {
+    b = i == i;
+    b = b == b;
+
+    b = i != i;
+    b = b != b;
+}
+
+// assignment
+void test_assignment() {
+    i = i;
+    i = p.x;
+    b = b;
+    b = p.x == p.y;
+}
