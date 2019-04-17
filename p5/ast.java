@@ -1342,7 +1342,7 @@ class IdNode extends ExpNode {
 
     @Override
     public Type typeCheck() {
-        Type t = mySym.getType();
+        Type t = mySym.getType().clone();
         t.lineNum = myLineNum;
         t.charNum = myCharNum;
         return t;
@@ -1513,7 +1513,7 @@ class AssignNode extends ExpNode {
     @Override
     public Type typeCheck() {
         Type leftType = myLhs.typeCheck();
-        Type rightType = myLhs.typeCheck();
+        Type rightType = myExp.typeCheck();
         if (leftType.equals(new ErrorType()) || rightType.equals(new ErrorType())) {
             return new ErrorType();
         }
@@ -1581,7 +1581,7 @@ class CallExpNode extends ExpNode {
     @Override
     public Type typeCheck() {
         Sym sym = myId.sym();
-        Type returnType = sym.getType();
+        Type returnType = myId.typeCheck();
         int lineNum = returnType.lineNum;
         int charNum = returnType.charNum;
 
@@ -1713,9 +1713,10 @@ abstract class BinaryEqualityExpNode extends BinaryExpNode {
     public Type typeCheck() {
         Type leftType = myExp1.typeCheck();
         Type rightType = myExp2.typeCheck();
-        if (leftType.equals(new ErrorType()) || rightType.equals(new ErrorType())) {
+        
+        if (leftType.isErrorType() || rightType.isErrorType())
             return new ErrorType();
-        }
+            
         int lineNum = leftType.lineNum;
         int charNum = leftType.charNum;
 
@@ -1758,6 +1759,9 @@ abstract class BinaryArithmeticExpNode extends BinaryExpNode {
         Type t1 = myExp1.typeCheck();
         Type t2 = myExp2.typeCheck();
 
+        if (t1.isErrorType() || t2.isErrorType())
+            return new ErrorType();
+
         boolean good = true;
         if (!t1.isIntType()) {
             ErrMsg.fatal(t1.lineNum, t1.charNum, "Arithmetic operator applied to non-numeric operand");
@@ -1783,6 +1787,9 @@ abstract class BinaryRelationalExpNode extends BinaryExpNode {
         Type t1 = myExp1.typeCheck();
         Type t2 = myExp2.typeCheck();
 
+        if (t1.isErrorType() || t2.isErrorType())
+            return new ErrorType();
+
         boolean good = true;
         if (!t1.isIntType()) {
             ErrMsg.fatal(t1.lineNum, t1.charNum, "Relational operator applied to non-numeric operand");
@@ -1807,6 +1814,9 @@ abstract class BinaryBoolExpNode extends BinaryExpNode {
     public Type typeCheck() {
         Type t1 = myExp1.typeCheck();
         Type t2 = myExp2.typeCheck();
+
+        if (t1.isErrorType() || t2.isErrorType())
+            return new ErrorType();
 
         boolean good = true;
         if (!t1.isBoolType()) {

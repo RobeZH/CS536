@@ -24,6 +24,8 @@ abstract public class Type {
 
     abstract public boolean equals(Type t);
 
+    abstract public Type clone();
+
     /**
      * default methods for "isXXXType"
      */
@@ -80,6 +82,11 @@ class ErrorType extends Type {
     public String toString() {
         return "error";
     }
+
+    @Override
+    public Type clone() {
+        return new ErrorType();
+    }
 }
 
 // **********************************************************************
@@ -105,6 +112,11 @@ class IntType extends Type {
     public String toString() {
         return "int";
     }
+
+    @Override
+    public Type clone() {
+        return new IntType();
+    }
 }
 
 // **********************************************************************
@@ -129,6 +141,11 @@ class BoolType extends Type {
 
     public String toString() {
         return "bool";
+    }
+
+    @Override
+    public Type clone() {
+        return new BoolType();
     }
 }
 
@@ -156,6 +173,11 @@ class VoidType extends Type {
     public String toString() {
         return "void";
     }
+
+    @Override
+    public Type clone() {
+        return new VoidType();
+    }
 }
 
 // **********************************************************************
@@ -181,6 +203,11 @@ class StringType extends Type {
     public String toString() {
         return "String";
     }
+
+    @Override
+    public Type clone() {
+        return new StringType();
+    }
 }
 
 // **********************************************************************
@@ -205,6 +232,11 @@ class FnType extends Type {
 
     public String toString() {
         return "function";
+    }
+
+    @Override
+    public Type clone() {
+        return new FnType();
     }
 }
 
@@ -237,6 +269,11 @@ class StructType extends Type {
     public String toString() {
         return myId.name();
     }
+
+    @Override
+    public Type clone() {
+        return new StructType();
+    }
 }
 
 // **********************************************************************
@@ -261,5 +298,10 @@ class StructDefType extends Type {
 
     public String toString() {
         return "struct";
+    }
+
+    @Override
+    public Type clone() {
+        return new StructDefType();
     }
 }
