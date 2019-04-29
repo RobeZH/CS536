@@ -79,6 +79,7 @@ public class P6 {
 		} catch (FileNotFoundException ex) {
 			throw new BadOutfileException(ex, filename);
 		}
+		Codegen.p = outFile;
 	}
 
 	/**
@@ -162,9 +163,11 @@ public class P6 {
 			p.flush();
 			p.close();
 		}
-		catch(Exception e){
-		
-		}
+		catch(Exception e){}
+
+		astRoot.codeGen();
+
+
 		//////////////////////////
 		// TODO: Calling codeGen   //
 		//////////////////////////

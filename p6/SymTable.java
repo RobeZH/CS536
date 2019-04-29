@@ -1,6 +1,7 @@
 import java.util.*;
 
 public class SymTable {
+    public String curFunc = "main";
     public int offset = 8;
     private List<HashMap<String, Sym>> list;
     
