@@ -225,6 +225,7 @@ class FormalsListNode extends ASTnode {
      *     if there was no error, add type of formal decl to list
      */
     public List<Type> nameAnalysis(SymTable symTab) {
+        symTab.offset = -4;
         List<Type> typeList = new LinkedList<Type>();
         for (FormalDeclNode node : myFormals) {
             Sym sym = node.nameAnalysis(symTab);
@@ -270,6 +271,7 @@ class FnBodyNode extends ASTnode {
      * - process the statement list
      */
     public void nameAnalysis(SymTable symTab) {
+        symTab.offset = 8;
         myDeclList.nameAnalysis(symTab);
         myStmtList.nameAnalysis(symTab);
     }    
@@ -483,8 +485,10 @@ class VarDeclNode extends DeclNode {
             } 
         }
 
-        sym.setIsGlobal(symTab.getDepth() == 1);
-        
+        sym.isGlobal = symTab.getDepth() == 1;
+        sym.offset = sym.isGlobal ? 0 : symTab.offset;
+        symTab.offset += 4;
+
         return sym;
     }    
     
@@ -492,7 +496,7 @@ class VarDeclNode extends DeclNode {
         addIndent(p, indent);
         myType.unparse(p, 0);
         p.print(" ");
-        p.print(myId.name() + " (" + myId.sym().isGlobal + ")");
+        p.print(myId.name() + " (" + myId.sym().offset + ")");
         p.println(";");
     }
 
@@ -654,14 +658,16 @@ class FormalDeclNode extends DeclNode {
                 System.exit(-1);
             }        
 	}
-        
+        sym.offset = symTab.offset;
+        symTab.offset -= 4;
+
         return sym;
     }    
     
     public void unparse(PrintWriter p, int indent) {
         myType.unparse(p, 0);
         p.print(" ");
-        p.print(myId.name());
+        p.print(myId.name() + "(" + myId.sym().offset + ")");
     }
 
     // 2 kids
@@ -993,7 +999,7 @@ class WriteStmtNode extends StmtNode {
      * typeCheck
      */
     public void typeCheck(Type retType) {
-        Type type = myExp.typeCheck();
+        type = myExp.typeCheck();
         
         if (type.isFnType()) {
             ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
@@ -1025,6 +1031,7 @@ class WriteStmtNode extends StmtNode {
 
     // 1 kid
     private ExpNode myExp;
+    private Type type;
 }
 
 class IfStmtNode extends StmtNode {

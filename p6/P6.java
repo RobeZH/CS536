@@ -158,7 +158,7 @@ public class P6 {
 		
 		try{
 			PrintWriter p = new PrintWriter("test.out");
-			astRoot.unparse(p , 0);
+			astRoot.unparse(p, 0);
 			p.flush();
 			p.close();
 		}

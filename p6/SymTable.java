@@ -1,6 +1,7 @@
 import java.util.*;
 
 public class SymTable {
+    public int offset = 8;
     private List<HashMap<String, Sym>> list;
     
     public SymTable() {
@@ -71,6 +72,10 @@ public class SymTable {
 
     public int getDepth() {
         return list.size();
+    }
+
+    public int getLocalCount(){
+        return list.get(0).size();
     }
 
 }

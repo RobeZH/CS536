@@ -7,6 +7,7 @@ import java.util.*;
 public class Sym {
     private Type type;
     public boolean isGlobal;
+    public int offset;
     
     public Sym(Type type) {
         this.type = type;
@@ -18,10 +19,6 @@ public class Sym {
     
     public String toString() {
         return type.toString();
-    }
-
-    public void setIsGlobal(boolean isGlobal){
-        this.isGlobal = isGlobal;
     }
 }
 
