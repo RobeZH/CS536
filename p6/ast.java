@@ -114,6 +114,10 @@ abstract class ASTnode {
     protected void addIndent(PrintWriter p, int indent) {
         for (int k=0; k<indent; k++) p.print(" ");
     }
+
+    public void codeGen(){
+
+    }
 }
 
 // **********************************************************************
@@ -134,6 +138,9 @@ class ProgramNode extends ASTnode {
     public void nameAnalysis() {
         SymTable symTab = new SymTable();
         myDeclList.nameAnalysis(symTab);
+        Sym mainSym = symTab.lookupGlobal("main");
+        if(mainSym == null || !mainSym.getType().isFnType()) 
+            ErrMsg.fatal(0, 0, "No main function");
     }
     
     /**
@@ -475,6 +482,8 @@ class VarDeclNode extends DeclNode {
                 System.exit(-1);
             } 
         }
+
+        sym.setIsGlobal(symTab.getDepth() == 1);
         
         return sym;
     }    
@@ -483,7 +492,7 @@ class VarDeclNode extends DeclNode {
         addIndent(p, indent);
         myType.unparse(p, 0);
         p.print(" ");
-        p.print(myId.name());
+        p.print(myId.name() + " (" + myId.sym().isGlobal + ")");
         p.println(";");
     }
 

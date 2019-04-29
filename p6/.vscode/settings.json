@@ -1,0 +1,9 @@
+{
+    "files.exclude": {
+        "deps": true,
+        "java_cup": true,
+        "Carrot.jlex.java": true,
+        "*.class": true
+    },
+    "java.debug.settings.forceBuildBeforeLaunch": false
+}

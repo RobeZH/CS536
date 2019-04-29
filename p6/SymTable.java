@@ -68,4 +68,9 @@ public class SymTable {
         }
         System.out.println();
     }
+
+    public int getDepth() {
+        return list.size();
+    }
+
 }
