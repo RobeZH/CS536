@@ -156,21 +156,8 @@ public class P6 {
 			return P6.RESULT_TYPE_ERROR;
 		}
 
-		
-		try{
-			PrintWriter p = new PrintWriter("test.out");
-			astRoot.unparse(p, 0);
-			p.flush();
-			p.close();
-		}
-		catch(Exception e){}
-
 		astRoot.codeGen();
 
-
-		//////////////////////////
-		// TODO: Calling codeGen   //
-		//////////////////////////
 
 		return P6.RESULT_CORRECT;
 	}
