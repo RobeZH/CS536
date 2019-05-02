@@ -1079,7 +1079,7 @@ class ReadStmtNode extends StmtNode {
      * typeCheck
      */
     public void typeCheck(Type retType) {
-        Type type = myExp.typeCheck();
+        type = myExp.typeCheck();
         
         if (type.isFnType()) {
             ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
@@ -1112,6 +1112,13 @@ class ReadStmtNode extends StmtNode {
 
         Sym sym = ((IdNode) myExp).sym();
 
+        // handle non-zero values
+        String endLabel = Codegen.nextLabel();
+        Codegen.generate("li", Codegen.V1, Codegen.FALSE);
+        Codegen.generate("beq", Codegen.V0, Codegen.V1, endLabel);
+        Codegen.generate("li", Codegen.V0, Codegen.TRUE);
+        Codegen.p.println(endLabel + ": ");
+
         if(sym.isGlobal){
             Codegen.generate("sw", Codegen.V0, "_" + ((IdNode) myExp).name());
         } else {
@@ -1122,6 +1129,7 @@ class ReadStmtNode extends StmtNode {
 	}
     // 1 kid (actually can only be an IdNode or an ArrayExpNode)
     private ExpNode myExp;
+    private Type type;
 }
 
 class WriteStmtNode extends StmtNode {
