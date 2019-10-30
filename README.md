@@ -10,14 +10,4 @@
 | P6: Code Generator | [Requirement](http://pages.cs.wisc.edu/~loris/cs536/asn/p6/p6.html) | [Code](p6) |
 
 
-
-
-
-
-
-
-
-
-
-
-
+<br> Those six projects are done by [@RobeZH](https://github.com/541736690) and [@ShawnZhong](https://github.com/ShawnZhong).
